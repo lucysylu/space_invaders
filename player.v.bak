@@ -35,7 +35,6 @@ module player(clk, reset, draw_signal, erase_signal, left, right, finish);
 				.erase_signal(erase_signal),
 				.start_draw(start_draw),
 				.start_erase(start_erase),
-				.finish_erase(finish),
 				.counter(counter));
 endmodule
 
@@ -121,18 +120,18 @@ module datapath_ship(clk, reset, new_Ship_X, new_Ship_Y, left, right, ldx, ldy, 
 	end
 endmodule
 		
-module controller_ship(clk, reset, ldx, ldy, draw_signal, erase_signal, start_draw, start_erase, finish_erase, counter);
+module controller_ship(clk, reset, ldx, ldy, draw_signal, erase_signal, start_draw, start_erase, counter);
 		input clk;
 		input reset;
 		
 		input draw_signal, erase_signal;
 		
 		//enable signals
-		output reg ldx, ldy, start_draw, start_erase, finish_erase;
+		output reg ldx, ldy, start_draw, start_erase;
 		output reg [5:0] counter = 6'd0;
 		
 		//wires to indicate when its finished drawing
-		reg finish_draw, start_counter;
+		reg finish_draw, finish_erase, start_counter;
 		
 		//FSM state registers
 		reg [2:0] current_state, next_state;
