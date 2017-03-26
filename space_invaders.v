@@ -2,6 +2,8 @@ module space_invaders(
 		CLOCK_50,						
       KEY,
 		LEDR,
+		PS2_DAT,
+		PS2_CLK,
 		// The ports below are for the VGA output.  Do not change.
 		VGA_CLK,   						//	VGA Clock
 		VGA_HS,							//	VGA H_SYNC
@@ -56,6 +58,29 @@ module space_invaders(
 	assign bullet_erase = (clock_counter == 25'd833270) ? 1 : 0;
 	assign player_draw = (clock_counter == 25'd833220) ? 1 : 0;
 	assign player_erase = (clock_counter == 25'd833175) ? 1 : 0;
+	
+	wire collisions, valid, makeBreak; 
+	wire [7:0] user_input;
+	
+	keyboard_press_driver keyboard(
+		.CLOCK_50(CLOCK_50),
+		.valid(valid),
+		.makeBreak(makeBreak),
+		.outCode(user_input),
+		.PS2_DAT(PS2_DAT),
+		.PS2_CLK(PS2_CLK),
+		.reset(reset));
+		
+		
+	always @(posedge CLOCK_50)
+	begin
+		case(user_input)
+			4'h29: ldb = 1'b1;
+			4'h6b: left = 1'b1;
+			4'h74: right = 1'b1;
+			4'2d: reset = 1'b1;
+			default: begin reset = 1'b0; left = 1'b0; right = 1'b0; ldb = 1'b0; end
+	end 
 	
 	datapath d_main (
 			.clk(CLOCK_50),
