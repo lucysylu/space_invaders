@@ -1,20 +1,21 @@
-module player(clk, reset, draw_signal, erase_signal, left, right, finish);
+module player(clk, reset, draw_signal, erase_signal, left, right, finish, x_out, y_out, colour);
 
 	input clk, reset, left, right;
-	output reg finish;
 	input draw_signal, erase_signal;
 	wire start_draw, start_erase;
-	wire [2:0] colour;
-	
-	wire [8:0] x;
-	wire [7:0] y;
+	output wire [2:0] colour;
+	output wire finish;
+	wire ldx, ldy;
+	wire [2:0] counter;
+	output wire [8:0] x_out;
+	output wire [7:0] y_out;
 	
 	//datapath
 	datapath_ship d0(
-				.clk(CLOCK_50),
+				.clk(clk),
 				.reset(reset),
-				.new_Ship_X(x),
-				.new_Ship_Y(y),
+				.new_Ship_X(x_out),
+				.new_Ship_Y(y_out),
 				.left(left),
 				.right(right),
 				.ldx(ldx),
@@ -27,7 +28,7 @@ module player(clk, reset, draw_signal, erase_signal, left, right, finish);
 				.counter(counter));
 	//controller
 	controller_ship c0(
-				.clk(CLOCK_50),
+				.clk(clk),
 				.reset(reset),
 				.ldx(ldx),
 				.ldy(ldy),
@@ -73,11 +74,11 @@ module datapath_ship(clk, reset, new_Ship_X, new_Ship_Y, left, right, ldx, ldy, 
 		if(left && Ship_X == 1'b0)
 			Ship_X <= Ship_X;
 		else if(left && Ship_X != 1'b0)
-			Ship_X <= Ship_X - 1;
+			Ship_X <= Ship_X - 1'b1;
 		else if(right && Ship_X == 9'd309)
 			Ship_X <= Ship_X;
 		else if(right && Ship_X != 9'd309)
-			Ship_X <= Ship_X + 1;
+			Ship_X <= Ship_X + 1'b1;
 	end
 
 	//Drawing the ships

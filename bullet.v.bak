@@ -1,0 +1,172 @@
+module bullet(clk, reset, pos_x, pos_y, clk_draw, clk_erase, collision, x, y, colour);
+	
+	input clk, reset, collision, clk_draw, clk_erase;
+	input wire [8:0] pos_x;
+	input wire [7:0] pos_y;
+
+	wire draw_signal, erase_signal;
+	output wire [2:0] colour;
+	output wire [8:0] x;
+	output wire [7:0] y;
+	
+	wire [2:0] counter;
+	
+	datapath_bullet(
+		.clk(clk),
+		.reset(reset),
+		.counter(counter),
+		.ld_b(ldb), 
+		.x_in(pos_x),
+		.y_in(pos_y),
+		.colour(colour), 
+		.draw(draw_signal), 
+		.erase(erase_signal), 
+		.x_out(x), 
+		.y_out(y));
+		
+	controller_bullet(
+		.clk(clk), 
+		.reset(reset), 
+		.draw_signal(clk_draw), 
+		.erase_signal(clk_erase), 
+		.ld_bullet(ldb), 
+		.draw(draw_signal), 
+		.erase(erase_signal),
+		.bullet_counter(counter));
+		
+	
+endmodule
+
+module datapath_bullet(clk, reset, counter, ld_b, x_in, y_in, colour, draw, erase, x_out, y_out);
+	
+	//enable signals
+	input clk, reset, ld_b, draw, erase;
+	input [2:0] counter;		
+	
+	input [8:0] x_in;
+	input [7:0] y_in;
+	
+	reg [8:0] x_inter;
+	reg [7:0] y_inter;
+	
+	output reg [8:0] x_out;
+	output reg [7:0] y_out;
+	
+	//colour wires
+	output reg [2:0] colour;
+	
+	//Drawing the ships
+	always @(posedge clk)
+	begin
+	
+			if (!reset) begin
+				x_inter <= x_in + 3'd5;
+				y_inter <= y_in + 1'd1;
+				x_out <= x_inter;
+				y_out <= y_inter;
+			end
+			if (ld_b) begin
+				x_inter <= x_in + 3'd5;
+				y_inter <= y_in + 1'd1;
+			end
+			if (draw)
+				colour <= 3'b101;
+			if(erase)
+				colour <= 3'b000;
+			if (draw || erase)
+			begin
+				x_out = x_inter + counter[0];
+				y_out = y_inter + counter[2:1];
+
+			end
+		
+	end
+endmodule 
+
+module controller_bullet(clk, reset, draw_signal, erase_signal, ld_bullet, draw, erase, bullet_counter);
+		input clk;
+		input reset;
+		
+		input draw_signal, erase_signal;
+		
+		output reg ld_bullet, draw, erase;
+		
+		//wires to indicate when its finished drawing
+		reg finish_draw, finish_erase, start_counter, start_bullet;
+		
+		output reg [2:0] bullet_counter = 3'd0;
+		
+		//FSM state registers
+		reg [1:0] current_state, next_state;
+		
+		//FSM states
+		localparam  LOAD = 2'd0,
+						DRAW = 2'd1,
+						ERASE = 2'd2;
+		//State table			
+		always @(*)
+		begin: state_table
+			case(current_state)
+				LOAD: next_state = draw_signal ? DRAW: LOAD;
+				DRAW: next_state = erase_signal ? ERASE : DRAW;
+				ERASE: next_state = finish_erase ? LOAD : ERASE;
+
+				default: next_state = LOAD;
+			endcase
+		end
+		
+		//Output Logic (datapath)
+		always @(*)
+		begin
+			draw = 1'b0;
+			finish_draw = 1'b0;
+			erase = 1'b0;
+			finish_erase = 1'b0;
+			start_counter = 1'b0;
+			case(current_state)
+
+				LOAD: begin
+					ld_bullet = 1'b1;
+				end
+				DRAW: begin
+					start_bullet = 1'b1;
+					if (bullet_counter == 3'd6) begin
+						start_bullet = 1'b0;
+						finish_draw = 1'b1;
+					end
+					else if (!finish_draw)
+						draw = 1'b1;
+				end
+				ERASE: begin
+					start_bullet = 1'b1;
+					if (bullet_counter == 3'd6) begin
+						start_bullet = 1'b0;
+						finish_erase = 1'b1;
+					end
+					else if (!finish_erase)
+						erase = 1'b1;
+				end
+			endcase
+		end
+		
+		always @(posedge clk)
+		begin
+			if (start_bullet) begin
+				if (bullet_counter == 3'd6)
+					bullet_counter <= 3'd0;
+				else 
+					bullet_counter <= bullet_counter + 1;
+			end
+		end
+		
+		//current state registers
+		always@(posedge clk)
+		begin: state_FFS
+		if(!reset)
+			current_state <= LOAD;
+		else
+			current_state <= next_state;
+		end
+		
+endmodule
+

@@ -118,31 +118,7 @@ module space_invaders(
 			.erase_signal(player_erase), 
 			.left(left), 
 			.right(right), 
-			.finish(player_fin),
-			.x_out(player_x),
-			.y_out(player_y),
-			.colour(player_colour));
-			
-	reg [8:0] bx;
-	reg [7:0] by;
-	
-	always @(posedge lda)
-	begin
-		bx <= player_x;
-		by <= player_y;
-	end
-			
-	bullet b(
-		.clk(CLOCK_50), 
-		.reset(reset), 
-		.pos_x(bx), 
-		.pos_y(by), 
-		.clk_draw(bullet_draw), 
-		.clk_erase(bullet_erase), 
-		.collision(collision), 
-		.x(bullet_x), 
-		.y(bullet_y), 
-		.colour(bullet_colour));
+			.finish(player_fin));
 
 endmodule
 

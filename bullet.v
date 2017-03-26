@@ -1,20 +1,20 @@
-module bullet(clk, reset, pos_x, pos_y, draw_signal, erase_signal, collision, x, y, colour);
+module bullet(clk, reset, pos_x, pos_y, clk_draw, clk_erase, collision, x, y, colour);
 	
-	input clk, reset, collision, draw_signal, erase_signal;
-	input [8:0] pos_x;
-	input [7:0] pos_y;
+	input clk, reset, collision, clk_draw, clk_erase;
+	input wire [8:0] pos_x;
+	input wire [7:0] pos_y;
 
-	reg wire [8:0] pos_x;
-	reg wire [7:0] pos_y;
-	
+	wire draw_signal, erase_signal, ldb;
 	output wire [2:0] colour;
 	output wire [8:0] x;
 	output wire [7:0] y;
-
+	
+	wire [2:0] counter;
 	
 	datapath_bullet(
 		.clk(clk),
 		.reset(reset),
+		.counter(counter),
 		.ld_b(ldb), 
 		.x_in(pos_x),
 		.y_in(pos_y),
@@ -25,43 +25,49 @@ module bullet(clk, reset, pos_x, pos_y, draw_signal, erase_signal, collision, x,
 		.y_out(y));
 		
 	controller_bullet(
-		.
+		.clk(clk), 
+		.reset(reset), 
+		.draw_signal(clk_draw), 
+		.erase_signal(clk_erase), 
+		.ld_bullet(ldb), 
+		.draw(draw_signal), 
+		.erase(erase_signal),
+		.bullet_counter(counter));
 		
 	
 endmodule
 
-module datapath_bullet(clk, reset,ld_b, x_in, y_in, colour, draw, erase, x_out, y_out);
+module datapath_bullet(clk, reset, counter, ld_b, x_in, y_in, colour, draw, erase, x_out, y_out);
 	
 	//enable signals
 	input clk, reset, ld_b, draw, erase;
+	input [2:0] counter;		
 	
-	input reg [8:0] x_in;
-	input reg [7:0] y_in;
+	input [8:0] x_in;
+	input [7:0] y_in;
+	
+	reg [8:0] x_inter;
+	reg [7:0] y_inter;
 	
 	output reg [8:0] x_out;
 	output reg [7:0] y_out;
 	
 	//colour wires
 	output reg [2:0] colour;
-	reg [2:0] offset = 3'd6;	
-	reg [2:0] bulletpos;
-
+	
 	//Drawing the ships
 	always @(posedge clk)
 	begin
-			finish = 1'b0;
+	
 			if (!reset) begin
-				//TODO: add x-offset so bullet is coming from middle & top of player
-				x_in <= x_in + 3'd5;
-				y_in <= y_in + 1'd1;
-				pos = 3'b00;
+				x_inter <= x_in + 3'd5;
+				y_inter <= y_in + 1'd1;
+				x_out <= x_inter;
+				y_out <= y_inter;
 			end
 			if (ld_b) begin
-				x_in <= x_in;
-				if ((y_in + offset) > 244)
-					y_in <= y_in;
-				else y_in <= y_in + offset;
-				bulletpos = 3'b000;
+				x_inter <= x_in + 3'd5;
+				y_inter <= y_in + 1'd1;
 			end
 			if (draw)
 				colour <= 3'b101;
@@ -69,17 +75,15 @@ module datapath_bullet(clk, reset,ld_b, x_in, y_in, colour, draw, erase, x_out, 
 				colour <= 3'b000;
 			if (draw || erase)
 			begin
-				x_out = x_in + bulletpos[0];
-				y_out = y_in + bulletpos[2:1];
-				if (bulletpos != 3'b111)
-					bulletpos <= bulletpos + 1'b1;
+				x_out <= x_inter + counter[0];
+				y_out <= y_inter + counter[2:1];
 
 			end
 		
 	end
 endmodule 
 
-module controller_bullet(clk, reset, draw_signal, erase_signal, ld_bullet, draw, erase, counter);
+module controller_bullet(clk, reset, draw_signal, erase_signal, ld_bullet, draw, erase, bullet_counter);
 		input clk;
 		input reset;
 		
@@ -114,9 +118,9 @@ module controller_bullet(clk, reset, draw_signal, erase_signal, ld_bullet, draw,
 		//Output Logic (datapath)
 		always @(*)
 		begin
-			start_draw = 1'b0;
+			draw = 1'b0;
 			finish_draw = 1'b0;
-			start_erase = 1'b0;
+			erase = 1'b0;
 			finish_erase = 1'b0;
 			start_counter = 1'b0;
 			case(current_state)
@@ -126,30 +130,29 @@ module controller_bullet(clk, reset, draw_signal, erase_signal, ld_bullet, draw,
 				end
 				DRAW: begin
 					start_bullet = 1'b1;
-					if (bullet_counter == 3'd4) begin
+					if (bullet_counter == 3'd6) begin
 						start_bullet = 1'b0;
-						finish_db = 1'b1;
+						finish_draw = 1'b1;
 					end
-					else if (!finish_db)
-						bullet_draw = 1'b1;
+					else if (!finish_draw)
+						draw = 1'b1;
 				end
 				ERASE: begin
 					start_bullet = 1'b1;
-					if (bullet_counter == 3'd4) begin
+					if (bullet_counter == 3'd6) begin
 						start_bullet = 1'b0;
-						finish_eb = 1'b1;
+						finish_erase = 1'b1;
 					end
-					else if (!finish_eb)
-						bullet_draw = 1'b1;
+					else if (!finish_erase)
+						erase = 1'b1;
 				end
 			endcase
 		end
 		
-		//counter used to draw the player sprite
 		always @(posedge clk)
 		begin
 			if (start_bullet) begin
-				if (bullet_counter == 3'd4)
+				if (bullet_counter == 3'd6)
 					bullet_counter <= 3'd0;
 				else 
 					bullet_counter <= bullet_counter + 1;
