@@ -76,9 +76,9 @@ module space_invaders(
 	begin
 		case(user_input)
 			4'h29: ldb = 1'b1;
-			4'h6b: left = 1'b1;
+			4'h6B: left = 1'b1;
 			4'h74: right = 1'b1;
-			4'2d: reset = 1'b1;
+			4'h2D: reset = 1'b1;
 			default: begin reset = 1'b0; left = 1'b0; right = 1'b0; ldb = 1'b0; end
 	end 
 	
