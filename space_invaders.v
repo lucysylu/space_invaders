@@ -15,7 +15,7 @@ module space_invaders(
 		VGA_B   						//	VGA Blue[9:0]
 	);
 	
-	input CLOCK_50;
+	input CLOCK_50, PS2_DAT, PS2_CLK;
 	input [3:0] KEY;
 	output [1:0]   LEDR;
 	output			VGA_CLK;   				//	VGA Clock	
@@ -29,7 +29,7 @@ module space_invaders(
 	
 	wire writeEn;
 	wire [2:0] colour;
-	wire reset;
+	reg reset;
 	wire [8:0] x;
 	wire [7:0] y;
 	
@@ -39,7 +39,7 @@ module space_invaders(
 	wire player_fin, alien_fin, bullet_fin;
 	wire lda, ldb, ldp;
 	
-	wire left, right;
+	reg left, right;
 	
 	reg [25:0] clock_counter = 25'd0;
 	
@@ -71,16 +71,18 @@ module space_invaders(
 		.PS2_CLK(PS2_CLK),
 		.reset(reset));
 		
+	reg fire;
 		
 	always @(posedge CLOCK_50)
 	begin
 		case(user_input)
-			4'h29: ldb = 1'b1;
+			4'h29: fire = 1'b1;
 			4'h6B: left = 1'b1;
 			4'h74: right = 1'b1;
 			4'h2D: reset = 1'b1;
-			default: begin reset = 1'b0; left = 1'b0; right = 1'b0; ldb = 1'b0; end
-	end 
+			default: begin reset = 1'b0; left = 1'b0; right = 1'b0; fire = 1'b0; end
+		endcase
+	end
 	
 	datapath d_main (
 			.clk(CLOCK_50),
@@ -105,6 +107,7 @@ module space_invaders(
 	controller c_main(
 			.clk(CLOCK_50),
 			.reset(reset), 
+			.fire(fire),
 			.p_sig(player_erase), 
 			.a_sig(alien_erase), 
 			.b_sig(bullet_erase), 
@@ -209,8 +212,8 @@ module datapath(clk, reset, lda, ldb, ldp, alienX, alienY, alienColour,
 	
 endmodule
 
-module controller(clk, reset, p_sig, a_sig, b_sig, p_fin, b_fin, a_fin, lda, ldb, ldp);
-	input clk, reset; 
+module controller(clk, reset, fire, p_sig, a_sig, b_sig, p_fin, b_fin, a_fin, lda, ldb, ldp);
+	input clk, reset, fire; 
 	input p_sig, a_sig, b_sig, p_fin, b_fin, a_fin;
 	
 	output reg lda, ldb, ldp;
@@ -222,8 +225,9 @@ module controller(clk, reset, p_sig, a_sig, b_sig, p_fin, b_fin, a_fin, lda, ldb
 					LP_WAIT = 3'd1,
 					LOAD_ALIENS = 3'd2,
 					LA_WAIT = 3'd3,
-					LOAD_BULLET = 3'd4,
-					LB_WAIT = 3'd5;
+					CHECK_BULLET = 3'd4,
+					LOAD_BULLET = 3'd5,
+					LB_WAIT = 3'd6;
 
 					
 		//State table	
@@ -235,6 +239,7 @@ module controller(clk, reset, p_sig, a_sig, b_sig, p_fin, b_fin, a_fin, lda, ldb
 				LP_WAIT: next_state = a_fin ?	LOAD_ALIENS : LP_WAIT;
 				LOAD_ALIENS: next_state = a_sig ? LA_WAIT : LOAD_ALIENS;
 				LA_WAIT: next_state = a_fin ? LOAD_BULLET : LA_WAIT;
+				CHECK_BULLET: next_state = fire ? LOAD_BULLET : LOAD_PLAYER;
 				LOAD_BULLET: next_state = b_sig ? LB_WAIT : LOAD_BULLET;
 				LB_WAIT: next_state = b_fin ? LOAD_PLAYER : LB_WAIT;
 				default: next_state = LOAD_PLAYER;
