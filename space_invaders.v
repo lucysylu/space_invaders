@@ -1,5 +1,5 @@
 module space_invaders(
-		CLOCK_50,						
+				CLOCK_50,						
       KEY,
 		LEDR,
 		PS2_DAT,
@@ -33,72 +33,73 @@ module space_invaders(
 	wire [8:0] x;
 	wire [7:0] y;
 	
-	wire [8:0] player_x, bullet_x, alien_x;
-	wire [7:0] player_y, bullet_y, alien_y;
-	wire player_draw, player_erase, bullet_draw, bullet_erase, alien_draw, alien_erase;
-	wire [2:0] player_colour, bullet_colour, alien_colour;
-	wire player_fin, alien_fin, bullet_fin;
-	wire lda, ldb, ldp;
+	wire [8:0] player_x, bullet_x, alien_x, alien_x_2, alien_x_3;
+	wire [7:0] player_y, bullet_y, alien_y, alien_y_2, alien_y_3;
+	wire player_draw, player_erase, bullet_draw, bullet_erase, alien_draw_1, alien_erase_1, alien_draw_2, alien_erase_2, alien_draw_3, alien_erase_3;
+	wire [2:0] player_colour, bullet_colour, alien_colour, alien_colour_2, alien_colour_3;
+	wire player_fin, alien_fin_1, alien_fin_2, alien_fin_3, bullet_fin;
+	wire lda, lda_2, lda_3, ldb, ldp;
 	
 	//change to reg with kb input
 	reg left, right, reset;
 	wire kb_reset = 1'b0;
 	reg fire;
 	
-	wire collisions, valid; 
+	wire collision, collision_2, collision_3, valid; 
 	wire [7:0] user_input;
 	wire makeBreak; 
 	
-	keyboard_press_driver keyboard(
-		.CLOCK_50(CLOCK_50),
-		.valid(valid),
-		.makeBreak(makeBreak),
-		.outCode(user_input),
-		.PS2_DAT(PS2_DAT),
-		.PS2_CLK(PS2_CLK),
-		.reset(kb_reset));
-
-	
-	always @(posedge CLOCK_50)
-	begin
-		reset <= 1'b1;
-		fire <= 1'b0; left <= 1'b0; right = 1'b0;
-		if (user_input == 8'h29 && makeBreak == 1'b1) begin
-			fire <= 1'b1;
-			LEDR[0] <= 1'b1;
-		end
-		else if (user_input == 8'h29 && makeBreak == 1'b0) begin
-			fire <= 1'b0;
-			LEDR[0] <= 1'b0;
-		end
-			
-		else if (user_input == 8'h6B && makeBreak == 1'b1) begin
-			left <= 1'b1;
-			LEDR[1] <= 1'b1;
-		end
-		else if (user_input == 8'h6B && makeBreak == 1'b0) begin
-			left <= 1'b0;
-			LEDR[1] <= 1'b0;
-		end
-		
-		else if (user_input == 8'h74 && makeBreak == 1'b1) begin
-			right <= 1'b1;
-			LEDR[2] <= 1'b1;
-		end
-		else if (user_input == 8'h74 && makeBreak == 1'b0) begin
-			right <= 1'b0;
-			LEDR[2] <= 1'b0;
-		end
-		else if (user_input == 8'h2D && makeBreak == 1'b1) begin
-			reset <= 1'b0;
-			LEDR[3] <= 1'b1;
-		end
-		else if (user_input == 8'h2D && makeBreak == 1'b0) begin
-			reset <= 1'b1;
-			LEDR[3] <= 1'b0;
-		end
-		else LEDR[4:0] = 5'd0;
-	end
+//	keyboard_press_driver keyboard(
+//		.CLOCK_50(CLOCK_50),
+//		.valid(valid),
+//		.makeBreak(makeBreak),
+//		.outCode(user_input),
+//		.PS2_DAT(PS2_DAT),
+//		.PS2_CLK(PS2_CLK),
+//		.reset(kb_reset));
+//
+//	
+//	//keyboard inputs
+//	always @(posedge CLOCK_50)
+//	begin
+//		reset <= 1'b1;
+//		fire <= 1'b0; left <= 1'b0; right = 1'b0;
+//		if (user_input == 8'h29 && makeBreak == 1'b1) begin
+//			fire <= 1'b1;
+//			LEDR[0] <= 1'b1;
+//		end
+//		else if (user_input == 8'h29 && makeBreak == 1'b0) begin
+//			fire <= 1'b0;
+//			LEDR[0] <= 1'b0;
+//		end
+//			
+//		else if (user_input == 8'h6B && makeBreak == 1'b1) begin
+//			left <= 1'b1;
+//			LEDR[1] <= 1'b1;
+//		end
+//		else if (user_input == 8'h6B && makeBreak == 1'b0) begin
+//			left <= 1'b0;
+//			LEDR[1] <= 1'b0;
+//		end
+//		
+//		else if (user_input == 8'h74 && makeBreak == 1'b1) begin
+//			right <= 1'b1;
+//			LEDR[2] <= 1'b1;
+//		end
+//		else if (user_input == 8'h74 && makeBreak == 1'b0) begin
+//			right <= 1'b0;
+//			LEDR[2] <= 1'b0;
+//		end
+//		else if (user_input == 8'h2D && makeBreak == 1'b1) begin
+//			reset <= 1'b0;
+//			LEDR[3] <= 1'b1;
+//		end
+//		else if (user_input == 8'h2D && makeBreak == 1'b0) begin
+//			reset <= 1'b1;
+//			LEDR[3] <= 1'b0;
+//		end
+//		else LEDR[4:0] = 5'd0;
+//	end
 	
 //	assign left = ~KEY[1];
 //	assign right = ~KEY[0];
@@ -120,10 +121,14 @@ module space_invaders(
 	
 	assign bullet_draw = (clock_counter == 25'd833333) ? 1 : 0;
 	assign bullet_erase = (clock_counter == 25'd833270) ? 1 : 0;
-	assign alien_draw = (clock_counter == 25'd833220) ? 1 : 0;
-	assign alien_erase = (clock_counter == 25'd833175) ? 1 : 0;
-	assign player_draw = (clock_counter == 25'd833100) ? 1 : 0;
-	assign player_erase = (clock_counter == 25'd833000) ? 1 : 0;
+	assign alien_draw_3 = (clock_counter == 25'd833220) ? 1 : 0;
+	assign alien_erase_3 = (clock_counter == 25'd833175) ? 1 : 0;
+	assign alien_draw_2 = (clock_counter == 25'd833100) ? 1 : 0;
+	assign alien_erase_2 = (clock_counter == 25'd833000) ? 1 : 0;
+	assign alien_draw_1 = (clock_counter == 25'd832900) ? 1 : 0;
+	assign alien_erase_1 = (clock_counter == 25'd832800) ? 1 : 0;
+	assign player_draw = (clock_counter == 25'd832700) ? 1 : 0;
+	assign player_erase = (clock_counter == 25'd832600) ? 1 : 0;
 
 	
 	
@@ -131,11 +136,19 @@ module space_invaders(
 			.clk(CLOCK_50),
 			.reset(reset),
 			.lda(lda),
+			.lda_2(lda_2),
+			.lda_3(lda_3),
 			.ldb(ldb),
 			.ldp(ldp),
 			.alienX(alien_x),
-			.alienY(alien_y), 
+			.alienY(alien_y),
+			.alienX_2(alien_x_2),
+			.alienY_2(alien_y_2), 
+			.alienX_3(alien_x_3),
+			.alienY_3(alien_y_3), 	
 			.alienColour(alien_colour),
+			.alienColour_2(alien_colour_2),
+			.alienColour_3(alien_colour_3),
 			.shipX(player_x),
 			.shipY(player_y), 
 			.bulletX(bullet_x), 
@@ -152,12 +165,18 @@ module space_invaders(
 			.reset(reset), 
 			.fire(fire),
 			.p_sig(player_erase), 
-			.a_sig(alien_erase), 
+			.a_sig_1(alien_erase_1),
+			.a_sig_2(alien_erase_2),
+			.a_sig_3(alien_erase_3),	
 			.b_sig(bullet_erase), 
 			.p_fin(player_fin), 
-			.b_fin(bullet_fin), 
-			.a_fin(alien_fin),
+			.b_fin(bullet_fin),
+			.a_fin_1(alien_fin_1),
+			.a_fin_2(alien_fin_2),
+			.a_fin_3(alien_fin_3),
 			.lda(lda), 
+			.lda_2(lda_2), 
+			.lda_3(lda_3), 
 			.ldb(ldb), 
 			.ldp(ldp));
 		
@@ -199,13 +218,39 @@ module space_invaders(
 		.reset(reset), 
 		.bullet_x(bullet_x),
 		.bullet_y(bullet_y),
-		.draw_signal(alien_draw), 
-		.erase_signal(alien_erase), 
-		.finish(alien_fin), 
+		.draw_signal(alien_draw_3), 
+		.erase_signal(alien_erase_3), 
+		.finish(alien_fin_3), 
 		.collision(collision),
 		.x(alien_x), 
 		.y(alien_y), 
 		.colour(alien_colour));
+	
+	alien_2 a2(
+		.clk(CLOCK_50), 
+		.reset(reset), 
+		.bullet_x(bullet_x),
+		.bullet_y(bullet_y),
+		.draw_signal(alien_draw_2), 
+		.erase_signal(alien_erase_2), 
+		.finish(alien_fin_2), 
+		.collision(collision_2),
+		.x(alien_x_2), 
+		.y(alien_y_2), 
+		.colour(alien_colour_2));
+		
+	alien_3 a3(
+		.clk(CLOCK_50), 
+		.reset(reset), 
+		.bullet_x(bullet_x),
+		.bullet_y(bullet_y),
+		.draw_signal(alien_draw_1), 
+		.erase_signal(alien_erase_1), 
+		.finish(alien_fin_1), 
+		.collision(collision_3),
+		.x(alien_x_3), 
+		.y(alien_y_3), 
+		.colour(alien_colour_3));
 		
 	reg [8:0] bx;
 	reg [7:0] by;
@@ -225,6 +270,8 @@ module space_invaders(
 		.clk_draw(bullet_draw), 
 		.clk_erase(bullet_erase), 
 		.collision(collision), 
+		.collision_2(collision_2), 
+		.collision_3(collision_3), 
 		.x(bullet_x), 
 		.y(bullet_y), 
 		.colour(bullet_colour),
@@ -232,13 +279,13 @@ module space_invaders(
 
 endmodule
 
-module datapath(clk, reset, lda, ldb, ldp, alienX, alienY, alienColour,
+module datapath(clk, reset, lda, lda_2, lda_3, ldb, ldp, alienX, alienY, alienX_2, alienY_2, alienX_3, alienY_3, alienColour, alienColour_2, alienColour_3,
 					shipX, shipY, bulletX, bulletY, shipColour, bulletColour, x, y, colour, writeEn);
 
-	input clk, reset, lda, ldb, ldp;
-	input [2:0] bulletColour, shipColour, alienColour;
-	input [8:0] shipX, bulletX, alienX;
-	input [7:0] shipY, bulletY, alienY;
+	input clk, reset, lda, lda_2, lda_3, ldb, ldp;
+	input [2:0] bulletColour, shipColour, alienColour, alienColour_2, alienColour_3;
+	input [8:0] shipX, bulletX, alienX, alienX_2, alienX_3;
+	input [7:0] shipY, bulletY, alienY, alienY_2, alienY_3;
 	
 	output reg [8:0] x;
 	output reg [7:0] y;
@@ -262,27 +309,41 @@ module datapath(clk, reset, lda, ldb, ldp, alienX, alienY, alienColour,
 			y <= alienY;
 			colour <= alienColour;
 		end
+		else if (lda_2) begin
+			x <= alienX_2;
+			y <= alienY_2;
+			colour <= alienColour_2;
+		end
+		else if (lda_3) begin
+			x <= alienX_3;
+			y <= alienY_3;
+			colour <= alienColour_3;
+		end
 		
 	end 
 	
 endmodule
 
-module controller(clk, reset, fire, p_sig, a_sig, b_sig, p_fin, b_fin, a_fin, lda, ldb, ldp);
+module controller(clk, reset, fire, p_sig, a_sig_1, a_sig_2, a_sig_3, b_sig, p_fin, b_fin, a_fin_1, a_fin_2, a_fin_3, lda, lda_2, lda_3, ldb, ldp);
 	input clk, reset, fire; 
-	input p_sig, a_sig, b_sig, p_fin, b_fin, a_fin;
+	input p_sig, a_sig_1, a_sig_2, a_sig_3, b_sig, p_fin, b_fin, a_fin_1, a_fin_2, a_fin_3;
 	
-	output reg lda, ldb, ldp;
+	output reg lda, lda_2, lda_3, ldb, ldp;
 	
 	//FSM state registers
-	reg [2:0] current_state, next_state;
+	reg [3:0] current_state, next_state;
 	
-	localparam LOAD_PLAYER = 3'd0,
-					LP_WAIT = 3'd1,
-					LOAD_ALIENS = 3'd2,
-					LA_WAIT = 3'd3,
-					CHECK_BULLET = 3'd4,
-					LOAD_BULLET = 3'd5,
-					LB_WAIT = 3'd6;
+	localparam LOAD_PLAYER = 4'd0,
+					LP_WAIT = 4'd1,
+					LOAD_ALIENS_1 = 4'd2,
+					LA_WAIT_1 = 4'd3,
+					LOAD_ALIENS_2 = 4'd4,
+					LA_WAIT_2 = 4'd5,
+					LOAD_ALIENS_3 = 4'd6,
+					LA_WAIT_3 = 4'd7,
+					CHECK_BULLET = 4'd8,
+					LOAD_BULLET = 4'd9,
+					LB_WAIT = 4'd10;
 
 					
 		//State table	
@@ -291,9 +352,13 @@ module controller(clk, reset, fire, p_sig, a_sig, b_sig, p_fin, b_fin, a_fin, ld
 		begin: state_table
 			case(current_state)
 				LOAD_PLAYER: next_state = p_sig ? LP_WAIT : LOAD_PLAYER;
-				LP_WAIT: next_state = p_fin ?	LOAD_ALIENS : LP_WAIT;
-				LOAD_ALIENS: next_state = a_sig ? LA_WAIT : LOAD_ALIENS;
-				LA_WAIT: next_state = a_fin ? LOAD_BULLET : LA_WAIT;
+				LP_WAIT: next_state = p_fin ?	LOAD_ALIENS_1 : LP_WAIT;
+				LOAD_ALIENS_1: next_state = a_sig_1 ? LA_WAIT_1 : LOAD_ALIENS_1;
+				LA_WAIT_1: next_state = a_fin_1 ? LOAD_ALIENS_2 : LA_WAIT_1;
+				LOAD_ALIENS_2: next_state = a_sig_2 ? LA_WAIT_2 : LOAD_ALIENS_2;
+				LA_WAIT_2: next_state = a_fin_2 ? LOAD_ALIENS_3 : LA_WAIT_2;
+				LOAD_ALIENS_3: next_state = a_sig_3 ? LA_WAIT_3 : LOAD_ALIENS_3;
+				LA_WAIT_3: next_state = a_fin_3 ? LOAD_BULLET : LA_WAIT_3;
 				CHECK_BULLET: next_state = fire ? LOAD_BULLET : LOAD_PLAYER;
 				LOAD_BULLET: next_state = b_sig ? LB_WAIT : LOAD_BULLET;
 				LB_WAIT: next_state = b_fin ? LOAD_PLAYER : LB_WAIT;
@@ -304,6 +369,8 @@ module controller(clk, reset, fire, p_sig, a_sig, b_sig, p_fin, b_fin, a_fin, ld
 		always @(*)
 		begin
 			lda = 1'b0;
+			lda_2 = 1'b0;
+			lda_3 = 1'b0;
 			ldb = 1'b0;
 			ldp = 1'b0;
 
@@ -312,10 +379,18 @@ module controller(clk, reset, fire, p_sig, a_sig, b_sig, p_fin, b_fin, a_fin, ld
 					ldp = 1'b1;
 				end
 
-				LA_WAIT: begin
+				LA_WAIT_1: begin
 					lda = 1'b1;
 				end
 
+				LA_WAIT_2: begin
+					lda_2 = 1'b1;
+				end
+				
+				LA_WAIT_3: begin
+					lda_3 = 1'b1;
+				end
+				
 				LB_WAIT: begin
 					ldb = 1'b1;
 				end
@@ -331,5 +406,6 @@ module controller(clk, reset, fire, p_sig, a_sig, b_sig, p_fin, b_fin, a_fin, ld
 			current_state <= next_state;
 		end
 endmodule
+
 
 

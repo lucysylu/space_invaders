@@ -1,6 +1,6 @@
-module bullet(clk, reset, fire, pos_x, pos_y, clk_draw, clk_erase, collision, x, y, colour, finish);
+module bullet(clk, reset, fire, pos_x, pos_y, clk_draw, clk_erase, collision, collision_2, collision_3, x, y, colour, finish);
 	
-	input clk, reset, collision, clk_draw, clk_erase, fire;
+	input clk, reset, collision, collision_2, collision_3, clk_draw, clk_erase, fire;
 	input [8:0] pos_x;
 	input [7:0] pos_y;
 
@@ -16,6 +16,8 @@ module bullet(clk, reset, fire, pos_x, pos_y, clk_draw, clk_erase, collision, x,
 		.clk(clk),
 		.reset(reset),
 		.collision(collision),
+		.collision_2(collision_2),
+		.collision_3(collision_3),
 		.counter(counter),
 		.fire(fire),
 		.ldx(ldx),
@@ -45,11 +47,11 @@ module bullet(clk, reset, fire, pos_x, pos_y, clk_draw, clk_erase, collision, x,
 	
 endmodule
 
-module datapath_bullet(clk, reset, collision, counter, fire, ldx, ldy, draw_signal, erase_signal, x_in, 
+module datapath_bullet(clk, reset, collision, collision_2, collision_3, counter, fire, ldx, ldy, draw_signal, erase_signal, x_in, 
 				y_in, colour, start_draw, start_erase, x_out, y_out);
 	
 	//enable signals
-	input clk, reset, collision, fire, ldx, ldy, start_draw, start_erase, draw_signal, erase_signal;
+	input clk, reset, collision, collision_2, collision_3, fire, ldx, ldy, start_draw, start_erase, draw_signal, erase_signal;
 	input [2:0] counter;		
 	
 	input [8:0] x_in;
@@ -74,7 +76,7 @@ module datapath_bullet(clk, reset, collision, counter, fire, ldx, ldy, draw_sign
 		end
 		if (active == 1'b1) begin
 			y_inter <= y_inter - 2'd2;
-			if (y_inter < 3'd5 || collision) begin
+			if (y_inter < 3'd5 || collision || collision_2 || collision_3) begin
 				quick_erase <= 1'b1;
 				active <= 1'b0;
 			end

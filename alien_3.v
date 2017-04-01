@@ -1,4 +1,4 @@
-module alien(clk, reset, bullet_x, bullet_y, draw_signal, erase_signal, finish, collision, x, y, colour);
+module alien_3(clk, reset, bullet_x, bullet_y, draw_signal, erase_signal, finish, collision, x, y, colour);
 
 	input clk, reset;
 	input [8:0] bullet_x;
@@ -14,7 +14,7 @@ module alien(clk, reset, bullet_x, bullet_y, draw_signal, erase_signal, finish, 
 	output wire [7:0] y;
 	
 	//datapath
-	datapath_alien d_alien(
+	datapath_alien_3 d_alien(
 				.clk(clk),
 				.reset(reset),
 				.bullet_x(bullet_x),
@@ -31,7 +31,7 @@ module alien(clk, reset, bullet_x, bullet_y, draw_signal, erase_signal, finish, 
 				.collision(collision),
 				.counter(counter));
 	//controller
-	controller_alien c_alien(
+	controller_alien_3 c_alien(
 				.clk(clk),
 				.reset(reset),
 				.ldx(ldx),
@@ -44,9 +44,9 @@ module alien(clk, reset, bullet_x, bullet_y, draw_signal, erase_signal, finish, 
 				.finish_draw(finish));		
 endmodule
 
-module datapath_alien(clk, reset, bullet_x, bullet_y, new_Alien_X, new_Alien_Y, ldx, ldy, draw_signal, erase_signal, colour, start_draw, start_erase, collision, counter);
+module datapath_alien_3(clk, reset, bullet_x, bullet_y, new_Alien_X, new_Alien_Y, ldx, ldy, draw_signal, erase_signal, colour, start_draw, start_erase, collision, counter);
 	//Alien sprite
-	reg [8:0] Alien_X = 9'd0;
+	reg [8:0] Alien_X = 9'd160;
 	reg [7:0] Alien_Y = 8'd0;
 	
 	//clock and reset
@@ -77,7 +77,7 @@ module datapath_alien(clk, reset, bullet_x, bullet_y, new_Alien_X, new_Alien_Y, 
 	always @(posedge draw_signal)
 	begin
 		if(!reset || collision) begin
-			Alien_X <= 9'd309;
+			Alien_X <= 9'd160;
 			Alien_Y <= 8'd0;
 			
 		end
@@ -155,7 +155,7 @@ module datapath_alien(clk, reset, bullet_x, bullet_y, new_Alien_X, new_Alien_Y, 
 	end
 endmodule
 		
-module controller_alien(clk, reset, ldx, ldy, draw_signal, erase_signal, start_draw, start_erase, counter, finish_draw);
+module controller_alien_3(clk, reset, ldx, ldy, draw_signal, erase_signal, start_draw, start_erase, counter, finish_draw);
 		input clk;
 		input reset;
 		
