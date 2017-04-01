@@ -76,7 +76,7 @@ module datapath_alien(clk, reset, bullet_x, bullet_y, new_Alien_X, new_Alien_Y, 
 	//determines the new position of the player sprite whenever its ready to draw, collision is implemented as well
 	always @(posedge draw_signal)
 	begin
-		if(!reset) begin
+		if(!reset || collision) begin
 			Alien_X <= 9'd0;
 			Alien_Y <= 8'd0;
 			
