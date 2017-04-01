@@ -1,10 +1,13 @@
-module alien(clk, reset, draw_signal, erase_signal, finish, x, y, colour);
+module alien(clk, reset, bullet_x, bullet_y, draw_signal, erase_signal, finish, collision, x, y, colour);
 
 	input clk, reset;
-	output reg finish;
+	input [8:0] bullet_x;
+	input [7:0] bullet_y;
+	output finish, collision;
 	input draw_signal, erase_signal;
 	wire start_draw, start_erase;
 	wire ldx, ldy;
+	wire [5:0] counter;
 	
 	output wire [2:0] colour;
 	output wire [8:0] x;
@@ -14,6 +17,8 @@ module alien(clk, reset, draw_signal, erase_signal, finish, x, y, colour);
 	datapath_alien d_alien(
 				.clk(clk),
 				.reset(reset),
+				.bullet_x(bullet_x),
+				.bullet_y(bullet_y),
 				.new_Alien_X(x),
 				.new_Alien_Y(y),
 				.ldx(ldx),
@@ -23,6 +28,7 @@ module alien(clk, reset, draw_signal, erase_signal, finish, x, y, colour);
 				.colour(colour),
 				.start_draw(start_draw),
 				.start_erase(start_erase),
+				.collision(collision),
 				.counter(counter));
 	//controller
 	controller_alien c_alien(
@@ -34,12 +40,13 @@ module alien(clk, reset, draw_signal, erase_signal, finish, x, y, colour);
 				.erase_signal(erase_signal),
 				.start_draw(start_draw),
 				.start_erase(start_erase),
-				.counter(counter));		
+				.counter(counter),
+				.finish_draw(finish));		
 endmodule
 
-module datapath_alien(clk, reset, new_Alien_X, new_Alien_Y, ldx, ldy, draw_signal, erase_signal, colour, start_draw, start_erase, counter);
+module datapath_alien(clk, reset, bullet_x, bullet_y, new_Alien_X, new_Alien_Y, ldx, ldy, draw_signal, erase_signal, colour, start_draw, start_erase, collision, counter);
 	//Alien sprite
-	reg [8:0] Alien_X = 9'd309;
+	reg [8:0] Alien_X = 9'd0;
 	reg [7:0] Alien_Y = 8'd0;
 	
 	//clock and reset
@@ -47,7 +54,7 @@ module datapath_alien(clk, reset, new_Alien_X, new_Alien_Y, ldx, ldy, draw_signa
 	
 	//direction of alien, 0 means left, 1 means right
 	reg direction = 1'b0;
-	
+	reg bump = 1'b0;
 	//colour wires
 	output reg [2:0] colour;
 	
@@ -55,9 +62,15 @@ module datapath_alien(clk, reset, new_Alien_X, new_Alien_Y, ldx, ldy, draw_signa
 	input ldx, ldy, draw_signal, erase_signal, start_draw, start_erase;
 	input [5:0] counter;
 	
+	//bullet
+	input [8:0] bullet_x;
+	input [7:0] bullet_y;
+	
 	//register used for drawing the sprites
 	output reg [8:0] new_Alien_X;
 	output reg [7:0] new_Alien_Y;
+	
+	output reg collision = 1'b0;
 	
 	
 	//determines the new position of the player sprite whenever its ready to draw, collision is implemented as well
@@ -66,14 +79,25 @@ module datapath_alien(clk, reset, new_Alien_X, new_Alien_Y, ldx, ldy, draw_signa
 		if(!reset) begin
 			Alien_X <= 9'd0;
 			Alien_Y <= 8'd0;
+			
+		end
+		else if(Alien_X == 9'd309 && direction == 1'b0 && bump == 1'b1) begin
+			Alien_X <= Alien_X - 1;
+			bump <= 1'b0;
+		end
+		else if(Alien_X == 9'd0 && direction == 1'b1 && bump == 1'b1) begin
+			Alien_X <= Alien_X + 1;
+			bump <= 1'b0;
 		end
 		else if(Alien_X == 9'd0 && direction == 1'b0) begin
 			Alien_Y <= Alien_Y + 1;
 			direction <= 1'b1;
+			bump <= 1'b1;
 		end
 		else if(Alien_X == 9'd309 && direction == 1'b1) begin
 			Alien_Y <= Alien_Y + 1;
 			direction <= 1'b0;
+			bump <= 1'b1;
 		end
 		else begin
 			if(direction)
@@ -81,6 +105,7 @@ module datapath_alien(clk, reset, new_Alien_X, new_Alien_Y, ldx, ldy, draw_signa
 			else if(!direction)
 				Alien_X <= Alien_X - 1;
 		end
+		
 	end
 
 	//Drawing the ships
@@ -89,6 +114,7 @@ module datapath_alien(clk, reset, new_Alien_X, new_Alien_Y, ldx, ldy, draw_signa
 		if(!reset) begin
 			new_Alien_X <= 9'd0;
 			new_Alien_Y <= 8'd0;
+			collision <= 1'b0;
 		end
 		if(ldx)
 			new_Alien_X <= Alien_X;
@@ -96,7 +122,7 @@ module datapath_alien(clk, reset, new_Alien_X, new_Alien_Y, ldx, ldy, draw_signa
 			new_Alien_Y <= Alien_Y;
 		if(draw_signal)
 			colour <= 3'b101;
-		if(erase_signal)
+		if(erase_signal || collision)
 			colour <= 3'b000;
 		//Sends appropriate coordinates to VGA adapter
 		if(start_draw || start_erase) begin
@@ -107,24 +133,28 @@ module datapath_alien(clk, reset, new_Alien_X, new_Alien_Y, ldx, ldy, draw_signa
 				new_Alien_Y <= new_Alien_Y + 1;
 			end
 			else if(counter < 6'd20)
-				new_Alien_X <= new_Alien_X + 1;
+				new_Alien_X <= new_Alien_X + 1'b1;
 			else if(counter == 6'd20) begin
 				new_Alien_X <= Alien_X;
-				new_Alien_Y <= new_Alien_Y + 1;
+				new_Alien_Y <= new_Alien_Y + 1'b1;
 			end
 			else if(counter < 6'd30)
-				new_Alien_X <= new_Alien_X + 1;
+				new_Alien_X <= new_Alien_X + 1'b1;
 			else if(counter == 6'd30) begin
 				new_Alien_X <= Alien_X;
-				new_Alien_Y <= new_Alien_Y + 1;
+				new_Alien_Y <= new_Alien_Y + 1'b1;
 			end
 			else if(counter < 6'd40)
-				new_Alien_X <= new_Alien_X + 1;
+				new_Alien_X <= new_Alien_X + 1'b1;
+				
+			if (new_Alien_Y == bullet_y && new_Alien_X == bullet_x)
+				collision <= 1'b1;
+			
 		end
 	end
 endmodule
 		
-module controller_alien(clk, reset, ldx, ldy, draw_signal, erase_signal, start_draw, start_erase, counter);
+module controller_alien(clk, reset, ldx, ldy, draw_signal, erase_signal, start_draw, start_erase, counter, finish_draw);
 		input clk;
 		input reset;
 		
@@ -135,7 +165,8 @@ module controller_alien(clk, reset, ldx, ldy, draw_signal, erase_signal, start_d
 		output reg [5:0] counter = 6'd0;
 		
 		//wires to indicate when its finished drawing
-		reg finish_draw, finish_erase, start_counter;
+		output reg finish_draw;
+		reg finish_erase, start_counter;
 		
 		//FSM state registers
 		reg [2:0] current_state, next_state;
@@ -243,3 +274,5 @@ module controller_alien(clk, reset, ldx, ldy, draw_signal, erase_signal, start_d
 			current_state <= next_state;
 		end
 endmodule
+
+

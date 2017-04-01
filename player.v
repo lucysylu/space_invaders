@@ -3,12 +3,13 @@ module player(clk, reset, draw_signal, erase_signal, left, right, finish, x_out,
 	input clk, reset, left, right;
 	input draw_signal, erase_signal;
 	wire start_draw, start_erase;
-	output wire [2:0] colour;
-	output wire finish;
+	output [2:0] colour;
+	output finish;
 	wire ldx, ldy;
-	wire [2:0] counter;
-	output wire [8:0] x_out;
-	output wire [7:0] y_out;
+	wire [5:0] counter;
+	output [8:0] x_out;
+	output [7:0] y_out;
+	
 	
 	//datapath
 	datapath_ship d0(
@@ -36,15 +37,15 @@ module player(clk, reset, draw_signal, erase_signal, left, right, finish, x_out,
 				.erase_signal(erase_signal),
 				.start_draw(start_draw),
 				.start_erase(start_erase),
-				.finish_erase(finish),
+				.finish_draw(finish),
 				.counter(counter));
 endmodule
 
 
 module datapath_ship(clk, reset, new_Ship_X, new_Ship_Y, left, right, ldx, ldy, draw_signal, erase_signal, colour, start_draw, start_erase, counter);
 	//Player sprite
-	reg [8:0] Ship_X = 9'd0;
-	reg [7:0] Ship_Y = 8'd0;
+	reg [8:0] Ship_X = 9'd160;
+	reg [7:0] Ship_Y = 8'd200;
 	
 	//clock and reset
 	input clk, reset;
@@ -68,8 +69,8 @@ module datapath_ship(clk, reset, new_Ship_X, new_Ship_Y, left, right, ldx, ldy, 
 	always @(posedge draw_signal)
 	begin
 		if(!reset) begin
-			Ship_X <= 9'd0;
-			Ship_Y <= 8'd0;
+			Ship_X <= 9'd160;
+			Ship_Y <= 8'd200;
 		end
 		if(left && Ship_X == 1'b0)
 			Ship_X <= Ship_X;
@@ -85,8 +86,8 @@ module datapath_ship(clk, reset, new_Ship_X, new_Ship_Y, left, right, ldx, ldy, 
 	always @(posedge clk)
 	begin
 		if(!reset) begin
-			new_Ship_X <= 9'd0;
-			new_Ship_Y <= 8'd0;
+			new_Ship_X <= 9'd160;
+			new_Ship_Y <= 8'd200;
 		end
 		if(ldx)
 			new_Ship_X <= Ship_X;
@@ -122,18 +123,18 @@ module datapath_ship(clk, reset, new_Ship_X, new_Ship_Y, left, right, ldx, ldy, 
 	end
 endmodule
 		
-module controller_ship(clk, reset, ldx, ldy, draw_signal, erase_signal, start_draw, start_erase, finish_erase, counter);
+module controller_ship(clk, reset, ldx, ldy, draw_signal, erase_signal, start_draw, start_erase, finish_draw, counter);
 		input clk;
 		input reset;
 		
 		input draw_signal, erase_signal;
 		
 		//enable signals
-		output reg ldx, ldy, start_draw, start_erase, finish_erase;
+		output reg ldx, ldy, start_draw, start_erase, finish_draw;
 		output reg [5:0] counter = 6'd0;
 		
 		//wires to indicate when its finished drawing
-		reg finish_draw, start_counter;
+		reg finish_erase, start_counter;
 		
 		//FSM state registers
 		reg [2:0] current_state, next_state;
@@ -241,3 +242,4 @@ module controller_ship(clk, reset, ldx, ldy, draw_signal, erase_signal, start_dr
 			current_state <= next_state;
 		end
 endmodule
+
