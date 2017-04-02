@@ -107,14 +107,25 @@ module datapath_alien_2(clk, reset, bullet_x, bullet_y, new_Alien_X, new_Alien_Y
 		end
 		
 	end
-
+	
+	always @(posedge clk)
+	begin
+		if (!reset)
+			collision <= 1'b0;
+		if (new_Alien_X > bullet_x + 1 || bullet_x > new_Alien_X + 9)
+			collision <= 1'b0;
+		else if (new_Alien_Y < bullet_y + 2 || bullet_y < new_Alien_X + 3)
+			collision <= 1'b0;
+		else
+			collision <= 1'b1;
+	end
+	
 	//Drawing the ships
 	always @(posedge clk)
 	begin
 		if(!reset) begin
 			new_Alien_X <= 9'd0;
 			new_Alien_Y <= 8'd0;
-			collision <= 1'b0;
 		end
 		if(ldx)
 			new_Alien_X <= Alien_X;
@@ -145,14 +156,7 @@ module datapath_alien_2(clk, reset, bullet_x, bullet_y, new_Alien_X, new_Alien_Y
 				new_Alien_Y <= new_Alien_Y + 1'b1;
 			end
 			else if(counter < 6'd40)
-				new_Alien_X <= new_Alien_X + 1'b1;
-			if (new_Alien_X > bullet_x + 1 || bullet_x > new_Alien_X + 9)
-				collision <= 1'b0;
-			else if (new_Alien_Y < bullet_y + 2 || bullet_y < new_Alien_X + 3)
-				collision <= 1'b0;
-			else
-				collision <= 1'b1;
-			
+				new_Alien_X <= new_Alien_X + 1'b1;		
 		end
 	end
 endmodule
