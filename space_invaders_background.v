@@ -38,77 +38,19 @@ module space_invaders(
 	wire player_draw, player_erase, bullet_draw, bullet_erase, alien_draw_1, alien_erase_1, alien_draw_2, alien_erase_2, alien_draw_3, alien_erase_3;
 	wire [2:0] player_colour, bullet_colour, alien_colour, alien_colour_2, alien_colour_3;
 	wire player_fin, alien_fin_1, alien_fin_2, alien_fin_3, bullet_fin;
-	wire lda, lda_2, lda_3, ldb, ldp;
+	wire lda, lda_2, lda_3, ldb, ldp, ldblack, black_fin;
 	
 	//change to reg with kb input
-	wire left, right, reset;
+	reg left, right, reset;
 	wire kb_reset = 1'b0;
-	wire fire;
+	wire start;
+	reg fire;
 	
-<<<<<<< HEAD
-//	wire collisions, valid; 
-//	wire [7:0] user_input;
-//	wire makeBreak; 
-//	
-//	keyboard_press_driver keyboard(
-//		.CLOCK_50(CLOCK_50),
-//		.valid(valid),
-//		.makeBreak(makeBreak),
-//		.outCode(user_input),
-//		.PS2_DAT(PS2_DAT),
-//		.PS2_CLK(PS2_CLK),
-//		.reset(kb_reset));
-//
-//	
-//	always @(posedge CLOCK_50)
-//	begin
-//		reset <= 1'b1;
-//		fire <= 1'b0; left <= 1'b0; right = 1'b0;
-//		if (user_input == 8'h29 && makeBreak == 1'b1) begin
-//			fire <= 1'b1;
-//			LEDR[0] <= 1'b1;
-//		end
-//		else if (user_input == 8'h29 && makeBreak == 1'b0) begin
-//			fire <= 1'b0;
-//			LEDR[0] <= 1'b0;
-//		end
-//			
-//		else if (user_input == 8'h6B && makeBreak == 1'b1) begin
-//			left <= 1'b1;
-//			LEDR[1] <= 1'b1;
-//		end
-//		else if (user_input == 8'h6B && makeBreak == 1'b0) begin
-//			left <= 1'b0;
-//			LEDR[1] <= 1'b0;
-//		end
-//		
-//		else if (user_input == 8'h74 && makeBreak == 1'b1) begin
-//			right <= 1'b1;
-//			LEDR[2] <= 1'b1;
-//		end
-//		else if (user_input == 8'h74 && makeBreak == 1'b0) begin
-//			right <= 1'b0;
-//			LEDR[2] <= 1'b0;
-//		end
-//		else if (user_input == 8'h2D && makeBreak == 1'b1) begin
-//			reset <= 1'b0;
-//			LEDR[3] <= 1'b1;
-//		end
-//		else if (user_input == 8'h2D && makeBreak == 1'b0) begin
-//			reset <= 1'b1;
-//			LEDR[3] <= 1'b0;
-//		end
-//		else LEDR[4:0] = 5'd0;
-//	end
-	
-	assign left = ~KEY[1];
-	assign right = ~KEY[0];
-	assign reset = KEY[3];
-	assign fire = ~KEY[2];
-=======
 	wire collision, collision_2, collision_3, valid; 
 	wire [7:0] user_input;
 	wire makeBreak; 
+	
+	assign start = ~KEY[0];
 	
 //	keyboard_press_driver keyboard(
 //		.CLOCK_50(CLOCK_50),
@@ -162,10 +104,10 @@ module space_invaders(
 //		else LEDR[4:0] = 5'd0;
 //	end
 	
-	assign left = ~KEY[1];
-	assign right = ~KEY[0];
-	assign reset = KEY[3];
-	assign fire = ~KEY[2];
+//	assign left = ~KEY[1];
+//	assign right = ~KEY[0];
+//	assign reset = KEY[3];
+//	assign fire = ~KEY[2];
 	
 	reg [25:0] clock_counter = 25'd0;
 	
@@ -219,12 +161,14 @@ module space_invaders(
 			.x(x), 
 			.y(y), 
 			.colour(colour), 
-			.writeEn(writeEn));
+			.writeEn(writeEn),
+			.black_fin(black_fin));
 			
 	controller c_main(
 			.clk(CLOCK_50),
 			.reset(reset), 
 			.fire(fire),
+			.black_fin(black_fin),
 			.p_sig(player_erase), 
 			.a_sig_1(alien_erase_1),
 			.a_sig_2(alien_erase_2),
@@ -239,7 +183,9 @@ module space_invaders(
 			.lda_2(lda_2), 
 			.lda_3(lda_3), 
 			.ldb(ldb), 
-			.ldp(ldp));
+			.ldp(ldp),
+			.start(start),
+			.ldblack(ldblack));
 		
 //	vga_adapter VGA(
 //			.resetn(reset),
@@ -260,7 +206,7 @@ module space_invaders(
 //		defparam VGA.RESOLUTION = "320x240";
 //		defparam VGA.MONOCHROME = "FALSE";
 //		defparam VGA.BITS_PER_COLOUR_CHANNEL = 1;
-//		defparam VGA.BACKGROUND_IMAGE = "black.mif";
+//		defparam VGA.BACKGROUND_IMAGE = "titlescreen.mif";
 
 	player p1(
 			.clk(CLOCK_50), 
@@ -341,20 +287,31 @@ module space_invaders(
 endmodule
 
 module datapath(clk, reset, lda, lda_2, lda_3, ldb, ldp, alienX, alienY, alienX_2, alienY_2, alienX_3, alienY_3, alienColour, alienColour_2, alienColour_3,
-					shipX, shipY, bulletX, bulletY, shipColour, bulletColour, x, y, colour, writeEn);
+					shipX, shipY, bulletX, bulletY, shipColour, bulletColour, x, y, colour, writeEn,ldblack, black_fin);
 
-	input clk, reset, lda, lda_2, lda_3, ldb, ldp;
+	input clk, reset, lda, lda_2, lda_3, ldb, ldp, ldblack;
 	input [2:0] bulletColour, shipColour, alienColour, alienColour_2, alienColour_3;
 	input [8:0] shipX, bulletX, alienX, alienX_2, alienX_3;
 	input [7:0] shipY, bulletY, alienY, alienY_2, alienY_3;
 	
-	output reg [8:0] x;
-	output reg [7:0] y;
-	output reg [2:0] colour;
+	output reg [8:0] x = 9'd0;
+	output reg [7:0] y = 8'd0;
+	output reg [2:0] colour = 3'd000;
 	output reg writeEn = 1'b1;
+	output reg black_fin = 1'b0;
 	
 	always @(posedge clk)
 	begin
+		if (ldblack) begin
+			if(x == 9'd319 && y == 8'd239)
+				black_fin <= 1'b1;
+			if(x == 9'd319) begin
+				x <= 9'd0;
+				y <= y + 1;
+			end
+			else
+				x <= x + 1;
+		end
 		if (ldp) begin
 			x <= shipX;
 			y <= shipY;
@@ -379,32 +336,35 @@ module datapath(clk, reset, lda, lda_2, lda_3, ldb, ldp, alienX, alienY, alienX_
 			x <= alienX_3;
 			y <= alienY_3;
 			colour <= alienColour_3;
-		endh
+		end
 		
 	end 
 	
 endmodule
 
-module controller(clk, reset, fire, p_sig, a_sig_1, a_sig_2, a_sig_3, b_sig, p_fin, b_fin, a_fin_1, a_fin_2, a_fin_3, lda, lda_2, lda_3, ldb, ldp);
-	input clk, reset, fire; 
+module controller(clk, reset, fire, black_fin, p_sig, a_sig_1, a_sig_2, a_sig_3, b_sig, p_fin, b_fin, a_fin_1, a_fin_2, a_fin_3, lda, lda_2, lda_3, ldb, ldp, 
+						start, ldblack);
+	input clk, reset, fire, black_fin, start; 
 	input p_sig, a_sig_1, a_sig_2, a_sig_3, b_sig, p_fin, b_fin, a_fin_1, a_fin_2, a_fin_3;
 	
-	output reg lda, lda_2, lda_3, ldb, ldp;
+	output reg lda, lda_2, lda_3, ldb, ldp, ldblack;
 	
 	//FSM state registers
 	reg [3:0] current_state, next_state;
 	
-	localparam LOAD_PLAYER = 4'd0,
-					LP_WAIT = 4'd1,
-					LOAD_ALIENS_1 = 4'd2,
-					LA_WAIT_1 = 4'd3,
-					LOAD_ALIENS_2 = 4'd4,
-					LA_WAIT_2 = 4'd5,
-					LOAD_ALIENS_3 = 4'd6,
-					LA_WAIT_3 = 4'd7,
-					CHECK_BULLET = 4'd8,
-					LOAD_BULLET = 4'd9,
-					LB_WAIT = 4'd10;
+	localparam  START = 4'd0,
+					BLACK_SCREEN = 4'd1,
+					LOAD_PLAYER = 4'd2,
+					LP_WAIT = 4'd3,
+					LOAD_ALIENS_1 = 4'd4,
+					LA_WAIT_1 = 4'd5,
+					LOAD_ALIENS_2 = 4'd6,
+					LA_WAIT_2 = 4'd7,
+					LOAD_ALIENS_3 = 4'd8,
+					LA_WAIT_3 = 4'd9,
+					CHECK_BULLET = 4'd10,
+					LOAD_BULLET = 4'd11,
+					LB_WAIT = 4'd12;
 
 					
 		//State table	
@@ -412,6 +372,8 @@ module controller(clk, reset, fire, p_sig, a_sig_1, a_sig_2, a_sig_3, b_sig, p_f
 		always @(*)
 		begin: state_table
 			case(current_state)
+				START: next_state = start ? BLACK_SCREEN : START;
+				BLACK_SCREEN: next_state = black_fin ? LOAD_PLAYER : BLACK_SCREEN;
 				LOAD_PLAYER: next_state = p_sig ? LP_WAIT : LOAD_PLAYER;
 				LP_WAIT: next_state = p_fin ?	LOAD_ALIENS_1 : LP_WAIT;
 				LOAD_ALIENS_1: next_state = a_sig_1 ? LA_WAIT_1 : LOAD_ALIENS_1;
@@ -423,7 +385,7 @@ module controller(clk, reset, fire, p_sig, a_sig_1, a_sig_2, a_sig_3, b_sig, p_f
 				CHECK_BULLET: next_state = fire ? LOAD_BULLET : LOAD_PLAYER;
 				LOAD_BULLET: next_state = b_sig ? LB_WAIT : LOAD_BULLET;
 				LB_WAIT: next_state = b_fin ? LOAD_PLAYER : LB_WAIT;
-				default: next_state = LOAD_PLAYER;
+				default: next_state = START;
 			endcase
 		end
 					
@@ -434,8 +396,13 @@ module controller(clk, reset, fire, p_sig, a_sig_1, a_sig_2, a_sig_3, b_sig, p_f
 			lda_3 = 1'b0;
 			ldb = 1'b0;
 			ldp = 1'b0;
+			ldblack= 1'b0;
 
 			case(current_state)
+				BLACK_SCREEN: begin
+					ldblack = 1'b1;
+				end
+				
 				LP_WAIT: begin
 					ldp = 1'b1;
 				end
@@ -462,7 +429,7 @@ module controller(clk, reset, fire, p_sig, a_sig_1, a_sig_2, a_sig_3, b_sig, p_f
 		always@(posedge clk)
 		begin: state_FFS
 		if(!reset)
-			current_state <= LOAD_PLAYER;
+			current_state <= START;
 		else
 			current_state <= next_state;
 		end
