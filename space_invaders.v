@@ -41,69 +41,69 @@ module space_invaders(
 	wire lda, ldb, ldp;
 	
 	//change to reg with kb input
-	reg left, right, reset;
+	wire left, right, reset;
 	wire kb_reset = 1'b0;
-	reg fire;
+	wire fire;
 	
-	wire collisions, valid; 
-	wire [7:0] user_input;
-	wire makeBreak; 
+//	wire collisions, valid; 
+//	wire [7:0] user_input;
+//	wire makeBreak; 
+//	
+//	keyboard_press_driver keyboard(
+//		.CLOCK_50(CLOCK_50),
+//		.valid(valid),
+//		.makeBreak(makeBreak),
+//		.outCode(user_input),
+//		.PS2_DAT(PS2_DAT),
+//		.PS2_CLK(PS2_CLK),
+//		.reset(kb_reset));
+//
+//	
+//	always @(posedge CLOCK_50)
+//	begin
+//		reset <= 1'b1;
+//		fire <= 1'b0; left <= 1'b0; right = 1'b0;
+//		if (user_input == 8'h29 && makeBreak == 1'b1) begin
+//			fire <= 1'b1;
+//			LEDR[0] <= 1'b1;
+//		end
+//		else if (user_input == 8'h29 && makeBreak == 1'b0) begin
+//			fire <= 1'b0;
+//			LEDR[0] <= 1'b0;
+//		end
+//			
+//		else if (user_input == 8'h6B && makeBreak == 1'b1) begin
+//			left <= 1'b1;
+//			LEDR[1] <= 1'b1;
+//		end
+//		else if (user_input == 8'h6B && makeBreak == 1'b0) begin
+//			left <= 1'b0;
+//			LEDR[1] <= 1'b0;
+//		end
+//		
+//		else if (user_input == 8'h74 && makeBreak == 1'b1) begin
+//			right <= 1'b1;
+//			LEDR[2] <= 1'b1;
+//		end
+//		else if (user_input == 8'h74 && makeBreak == 1'b0) begin
+//			right <= 1'b0;
+//			LEDR[2] <= 1'b0;
+//		end
+//		else if (user_input == 8'h2D && makeBreak == 1'b1) begin
+//			reset <= 1'b0;
+//			LEDR[3] <= 1'b1;
+//		end
+//		else if (user_input == 8'h2D && makeBreak == 1'b0) begin
+//			reset <= 1'b1;
+//			LEDR[3] <= 1'b0;
+//		end
+//		else LEDR[4:0] = 5'd0;
+//	end
 	
-	keyboard_press_driver keyboard(
-		.CLOCK_50(CLOCK_50),
-		.valid(valid),
-		.makeBreak(makeBreak),
-		.outCode(user_input),
-		.PS2_DAT(PS2_DAT),
-		.PS2_CLK(PS2_CLK),
-		.reset(kb_reset));
-
-	
-	always @(posedge CLOCK_50)
-	begin
-		reset <= 1'b1;
-		fire <= 1'b0; left <= 1'b0; right = 1'b0;
-		if (user_input == 8'h29 && makeBreak == 1'b1) begin
-			fire <= 1'b1;
-			LEDR[0] <= 1'b1;
-		end
-		else if (user_input == 8'h29 && makeBreak == 1'b0) begin
-			fire <= 1'b0;
-			LEDR[0] <= 1'b0;
-		end
-			
-		else if (user_input == 8'h6B && makeBreak == 1'b1) begin
-			left <= 1'b1;
-			LEDR[1] <= 1'b1;
-		end
-		else if (user_input == 8'h6B && makeBreak == 1'b0) begin
-			left <= 1'b0;
-			LEDR[1] <= 1'b0;
-		end
-		
-		else if (user_input == 8'h74 && makeBreak == 1'b1) begin
-			right <= 1'b1;
-			LEDR[2] <= 1'b1;
-		end
-		else if (user_input == 8'h74 && makeBreak == 1'b0) begin
-			right <= 1'b0;
-			LEDR[2] <= 1'b0;
-		end
-		else if (user_input == 8'h2D && makeBreak == 1'b1) begin
-			reset <= 1'b0;
-			LEDR[3] <= 1'b1;
-		end
-		else if (user_input == 8'h2D && makeBreak == 1'b0) begin
-			reset <= 1'b1;
-			LEDR[3] <= 1'b0;
-		end
-		else LEDR[4:0] = 5'd0;
-	end
-	
-//	assign left = ~KEY[1];
-//	assign right = ~KEY[0];
-//	assign reset = KEY[3];
-//	assign fire = ~KEY[2];
+	assign left = ~KEY[1];
+	assign right = ~KEY[0];
+	assign reset = KEY[3];
+	assign fire = ~KEY[2];
 	
 	reg [25:0] clock_counter = 25'd0;
 	
