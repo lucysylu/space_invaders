@@ -147,10 +147,11 @@ module datapath_alien(clk, reset, bullet_x, bullet_y, new_Alien_X, new_Alien_Y, 
 			else if(counter < 6'd40)
 				new_Alien_X <= new_Alien_X + 1'b1;
 			if (new_Alien_X > bullet_x + 1 || bullet_x > new_Alien_X + 9)
+				collision <= 1'b0;
+			else if (new_Alien_Y < bullet_y + 2 || bullet_y < new_Alien_X + 3)
+				collision <= 1'b0;
+			else
 				collision <= 1'b1;
-			if (new_Alien_Y < bullet_y + 2 || bullet_y < new_Alien_X + 3)
-				collision <= 1'b1;
-			
 		end
 	end
 endmodule
