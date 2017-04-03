@@ -86,6 +86,8 @@ module datapath_bullet(clk, reset, collision, collision_2, collision_3, counter,
 			x_inter <= x_in - 3'd5;
 			y_inter <= y_in - 3'd4;
 			active <= 1'b1;
+		end
+		else (active == 1'b0) begin
 			quick_erase <= 1'b0;
 		end
 	end
